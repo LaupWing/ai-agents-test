@@ -166,7 +166,7 @@ def generate_exercise_program(user_id: str, focus_areas: list) -> dict:
    }
 
 # Create the main fitness coaching agent
-fitness_coach_agent = Agent(
+root_agent = Agent(
    name="ai_fitness_coach",
    model="gemini-2.5-flash",  # Best for video analysis
    description="Expert AI fitness coach specializing in form analysis, nutrition guidance, and motivation coaching.",
