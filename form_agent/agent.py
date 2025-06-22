@@ -97,8 +97,8 @@ def analyze_workout_form(video_file_path: str, exercise_type: str = "", user_id:
             ]
         }
         
-        # Save analysis to user's profile (Firebase/database)
-        save_analysis_to_profile(user_id, analysis_result, video_file_path)
+        # Save analysis to user's profile (in-memory for now)
+        # save_analysis_to_profile(user_id, analysis_result, video_file_path)
         
         return {
             "success": True,
@@ -114,10 +114,9 @@ def analyze_workout_form(video_file_path: str, exercise_type: str = "", user_id:
 
 def get_user_form_progress(user_id: str, exercise_type: str = "") -> dict:
     """
-    Get user's form progression over time
+    Get user's form progression over time (simulated data for testing)
     """
-    # This would query your database for historical form analyses
-    # Simulated response
+    # Simulated response - in production you'd query your database
     return {
         "user_id": user_id,
         "exercise": exercise_type,
@@ -142,19 +141,22 @@ def get_user_form_progress(user_id: str, exercise_type: str = "") -> dict:
 def save_analysis_to_profile(user_id: str, analysis: dict, video_path: str):
     """
     Save form analysis to user's profile for progress tracking
+    (Currently just prints - replace with actual storage later)
     """
-    # Implementation would save to Firebase/database
-    # This is where you'd store:
-    # - Video reference
-    # - Analysis results  
-    # - Coach notes (if you review manually)
-    # - Progress metrics
-    pass
+    print(f"Saving analysis for user {user_id}:")
+    print(f"- Exercise: {analysis.get('exercise_identified', 'Unknown')}")
+    print(f"- Rating: {analysis.get('overall_rating', 'N/A')}")
+    print(f"- Video: {video_path}")
+    # In production: save to database, Firebase, or file system
 
-def generate_exercise_program(user_id: str, focus_areas: list[str]) -> dict:
+def generate_exercise_program(user_id: str, focus_areas: str) -> dict:
     """
     Generate targeted exercises based on form analysis weaknesses
+    focus_areas should be comma-separated string like "ankle_mobility,glute_strength"
     """
+    # Convert comma-separated string to list
+    focus_list = [area.strip() for area in focus_areas.split(",")]
+    
     # Based on identified issues, recommend specific exercises
     exercise_recommendations = {
         "ankle_mobility": [
@@ -175,7 +177,7 @@ def generate_exercise_program(user_id: str, focus_areas: list[str]) -> dict:
     }
     
     return {
-        "focus_areas": focus_areas,
+        "focus_areas": focus_list,
         "recommended_exercises": exercise_recommendations,
         "frequency": "3-4x per week",
         "progression_note": "Master bodyweight versions before adding load"
@@ -208,12 +210,19 @@ SPECIALIZATIONS:
 - Progressive overload principles
 - Sustainable habit building
 
+IMPORTANT - When to use tools:
+1. If a user uploads a video or mentions form analysis, ALWAYS use analyze_workout_form tool
+2. If asked about progress or improvement over time, use get_user_form_progress tool  
+3. If form issues are identified, use generate_exercise_program tool to recommend corrective exercises
+
 When analyzing form:
 1. Always start with positive observations
 2. Identify 2-3 key areas for improvement
 3. Provide specific coaching cues
 4. Recommend corrective exercises if needed
 5. Reference previous analyses to show progress
+
+For video analysis: When you receive video input, immediately use the analyze_workout_form function with appropriate parameters. If no video file path is provided, ask the user to upload their form video.
 
 Remember: You're not just analyzing movement - you're coaching a real person toward their fitness goals with patience, expertise, and encouragement.""",
     tools=[analyze_workout_form, get_user_form_progress, generate_exercise_program],
