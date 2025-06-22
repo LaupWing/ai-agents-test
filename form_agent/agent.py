@@ -5,8 +5,6 @@ import base64
 import requests
 from datetime import datetime
 
-# Environment variables
-GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 
 def analyze_workout_form(video_file_path: str, exercise_type: str = "", user_id: str = "") -> dict:
    """
@@ -97,8 +95,6 @@ def analyze_workout_form(video_file_path: str, exercise_type: str = "", user_id:
          ]
       }
       
-      # Save analysis to user's profile (Firebase/database)
-      save_analysis_to_profile(user_id, analysis_result, video_file_path)
       
       return {
          "success": True,
@@ -138,18 +134,6 @@ def get_user_form_progress(user_id: str, exercise_type: str = "") -> dict:
       "persistent_issues": ["Ankle mobility"],
       "strengths": ["Consistent depth", "Good control"]
    }
-
-def save_analysis_to_profile(user_id: str, analysis: dict, video_path: str):
-   """
-   Save form analysis to user's profile for progress tracking
-   """
-   # Implementation would save to Firebase/database
-   # This is where you'd store:
-   # - Video reference
-   # - Analysis results  
-   # - Coach notes (if you review manually)
-   # - Progress metrics
-   pass
 
 def generate_exercise_program(user_id: str, focus_areas: list) -> dict:
    """
@@ -219,12 +203,3 @@ Remember: You're not just analyzing movement - you're coaching a real person tow
    tools=[analyze_workout_form, get_user_form_progress, generate_exercise_program],
 )
 
-# Example usage
-if __name__ == "__main__":
-   # Simulate user interaction
-   print("AI Fitness Coach initialized!")
-   print("Upload a form video and I'll analyze it using proven coaching methods.")
-   
-   # Example analysis (you'd integrate this with your app's video upload)
-   # result = analyze_workout_form("user_squat_video.mp4", "squat", "user123")
-   # print(result)
