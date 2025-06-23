@@ -15,7 +15,7 @@ def analyze_exercise_video(video_filename: str, tool_context: ToolContext) -> st
             return "Error: GOOGLE_API_KEY not found in environment"
         
         client = genai.Client(api_key=api_key)
-        
+        print(video_filename)
         # Load video from ADK artifacts
         video_artifact = tool_context.load_artifact(filename=video_filename)
         if not video_artifact:
@@ -50,6 +50,7 @@ def analyze_exercise_video(video_filename: str, tool_context: ToolContext) -> st
         return response.text
         
     except Exception as e:
+        print(f"Error analyzing video: {str(e)}")
         return f"Error analyzing video: {str(e)}"
 
 # Create the agent
