@@ -9,29 +9,24 @@ async def analyze_exercise_video(tool_context: ToolContext) -> str:
     Analyze uploaded video to identify exercise using real Gemini Vision
     """
     try:
-        # Debug: Check what's available in the context
-        print(f"🔍 DEBUG: Available artifacts: {await tool_context.list_artifacts()}")
-        print(f"🔍 DEBUG: Tool context type: {type(tool_context)}")
-        print(f"🔍 DEBUG: Tool context attributes: {dir(tool_context)}")
+        # Debug: Check user content for video
+        print(f"🔍 DEBUG: User content: {tool_context.user_content}")
         
-        # Get list of artifacts and use the first video file
-        available_artifacts = await tool_context.list_artifacts()
-        if not available_artifacts:
-            return "No files uploaded. Please upload a workout video first!"
+        # Look for video in the user content
+        video_part = None
+        if tool_context.user_content and tool_context.user_content.parts:
+            for part in tool_context.user_content.parts:
+                print(f"🔍 DEBUG: Part type: {type(part)}, has inline_data: {hasattr(part, 'inline_data')}")
+                if hasattr(part, 'inline_data') and part.inline_data:
+                    print(f"🔍 DEBUG: Found inline data with mime_type: {part.inline_data.mime_type}")
+                    if part.inline_data.mime_type.startswith('video/'):
+                        video_part = part
+                        break
         
-        # Find a video file (assuming common video extensions)
-        video_filename = None
-        video_extensions = ['.mp4', '.mov', '.avi', '.mkv', '.webm']
+        if not video_part:
+            return "No video found in your message. Please upload a workout video!"
         
-        for artifact_name in available_artifacts:
-            if any(artifact_name.lower().endswith(ext) for ext in video_extensions):
-                video_filename = artifact_name
-                break
-        
-        if not video_filename:
-            return f"No video file found. Available files: {available_artifacts}"
-        
-        print(f"🎥 DEBUG: Using video file: {video_filename}")
+        print(f"🎥 DEBUG: Found video with mime_type: {video_part.inline_data.mime_type}")
         
         # Initialize Gemini client
         api_key = os.getenv("GOOGLE_API_KEY")
@@ -40,24 +35,21 @@ async def analyze_exercise_video(tool_context: ToolContext) -> str:
         
         client = genai.Client(api_key=api_key)
         
-        # Load video from ADK artifacts
-        video_artifact = await tool_context.load_artifact(filename=video_filename)
-        if not video_artifact:
-            print(f"❌ DEBUG: Could not load artifact: {video_filename}")
-            return f"Could not find video: {video_filename}"
-        
-        print(f"✅ DEBUG: Successfully loaded video artifact")
-        
         # Save video temporarily for Gemini upload
-        temp_video_path = f"/tmp/{video_filename}"
+        temp_video_path = f"/tmp/workout_video.mov"
         with open(temp_video_path, 'wb') as f:
-            f.write(video_artifact.inline_data.data)
+            f.write(video_part.inline_data.data)
         
         print(f"💾 DEBUG: Saved temp file: {temp_video_path}")
         
         # Upload video to Gemini
         myfile = client.files.upload(file=temp_video_path)
         print(f"⬆️ DEBUG: Uploaded to Gemini, file URI: {myfile.uri}")
+        
+        # Wait for file to be ready (Gemini needs processing time)
+        import time
+        print(f"⏳ DEBUG: Waiting 8 seconds for file to be ready...")
+        time.sleep(8)  # Wait 8 seconds for processing
         
         # Analyze with Gemini Vision
         response = client.models.generate_content(
