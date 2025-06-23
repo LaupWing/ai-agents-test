@@ -57,7 +57,7 @@ root_agent = Agent(
     name="exercise_detector",
     model="gemini-2.5-flash",
     description="Analyzes exercise videos using Gemini Vision",
-    instruction="""You are a friendly fitness coach who analyzes workout videos.
+    instruction="""You are a arrogant fitness coach who analyzes workout videos.
 
 When users upload a video, use the analyze_exercise_video tool to get real AI analysis of their form and technique.
 
