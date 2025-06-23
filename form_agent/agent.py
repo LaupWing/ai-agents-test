@@ -1,41 +1,66 @@
 # agent.py
 from google.adk.agents import Agent
+from google.adk.tools import ToolContext
+from google import genai
+import os
 
-def identify_exercise(video_filename: str) -> str:
+def analyze_exercise_video(video_filename: str, tool_context: ToolContext) -> str:
     """
-    Analyze uploaded video to identify which exercise is being performed
+    Analyze uploaded video to identify exercise using real Gemini Vision
     """
-    if not video_filename:
-        return "Please upload a video first!"
-    
-    print(f"Analyzing video: {video_filename}")
-    # For now, return a basic analysis
-    # In real implementation, this would analyze the actual video
-    return f"""I can see your video: {video_filename}
-
-Based on the movement patterns I observe, this appears to be:
-**Exercise Identified: SQUAT**
-
-Key indicators I noticed:
-- Hip hinge movement pattern
-- Knee bend with descent
-- Return to standing position
-- Looks like bodyweight or barbell squat
-
-Would you like me to analyze your form in more detail?"""
+    try:
+        # Initialize Gemini client
+        api_key = os.getenv("GOOGLE_API_KEY")
+        if not api_key:
+            return "Error: GOOGLE_API_KEY not found in environment"
+        
+        client = genai.Client(api_key=api_key)
+        
+        # Load video from ADK artifacts
+        video_artifact = tool_context.load_artifact(filename=video_filename)
+        if not video_artifact:
+            return f"Could not find video: {video_filename}"
+        
+        # Save video temporarily for Gemini upload
+        temp_video_path = f"/tmp/{video_filename}"
+        with open(temp_video_path, 'wb') as f:
+            f.write(video_artifact.inline_data.data)
+        
+        # Upload video to Gemini
+        myfile = client.files.upload(file=temp_video_path)
+        
+        # Analyze with Gemini Vision
+        response = client.models.generate_content(
+            model="gemini-2.0-flash", 
+            contents=[
+                myfile, 
+                """Analyze this exercise video and tell me:
+                1. What exercise is being performed?
+                2. How many reps do you count?
+                3. Basic form assessment (good/needs work)
+                4. One key improvement tip
+                
+                Keep it simple and encouraging!"""
+            ]
+        )
+        
+        # Clean up temp file
+        os.remove(temp_video_path)
+        
+        return response.text
+        
+    except Exception as e:
+        return f"Error analyzing video: {str(e)}"
 
 # Create the agent
 root_agent = Agent(
     name="exercise_detector",
     model="gemini-2.5-flash",
-    description="Identifies what exercise is being performed from uploaded videos",
-    instruction="""You are a fitness expert who can identify exercises from videos.
+    description="Analyzes exercise videos using Gemini Vision",
+    instruction="""You are a friendly fitness coach who analyzes workout videos.
 
-When users upload a video:
-1. Use the identify_exercise tool with the video filename
-2. Tell them what exercise you detected
-3. Keep it simple and friendly
+When users upload a video, use the analyze_exercise_video tool to get real AI analysis of their form and technique.
 
-If they ask for form analysis, use the tool to analyze their video.""",
-    tools=[identify_exercise],
+Be encouraging and helpful!""",
+    tools=[analyze_exercise_video],
 )
