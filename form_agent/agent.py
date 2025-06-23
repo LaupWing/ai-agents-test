@@ -8,6 +8,7 @@ def identify_exercise(video_filename: str) -> str:
     if not video_filename:
         return "Please upload a video first!"
     
+    print(f"Analyzing video: {video_filename}")
     # For now, return a basic analysis
     # In real implementation, this would analyze the actual video
     return f"""I can see your video: {video_filename}
