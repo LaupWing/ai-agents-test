@@ -1,82 +1,135 @@
-# fitness_form_agent.py
-from google.adk.agents import Agent
-from google.adk.tools.tool_context import ToolContext
-import google.genai.types as types
+import os
+import logging
+from google.adk.agents import LlmAgent
+from google.adk.tools import FunctionTool, ToolContext
+from google.adk.runners import Runner
+from google.adk.artifacts import InMemoryArtifactService, GcsArtifactService
+from google.adk.sessions import InMemorySessionService
+import google.genai as genai
+from typing import Dict, Any
 
-async def analyze_workout_form(context: ToolContext, video_filename: str, exercise_type: str = "unknown") -> str:
-    """
-    Analyze workout form from uploaded video using Gemini Vision
-    """
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Configure Gemini Vision
+os.environ['GOOGLE_CLOUD_PROJECT'] = 'your-project-id'
+os.environ['GOOGLE_CLOUD_LOCATION'] = 'us-central1'
+os.environ['GOOGLE_GENAI_USE_VERTEXAI'] = 'True'
+
+async def analyze_fitness_form(video_data: Dict[str, Any], tool_context: ToolContext) -> Dict[str, Any]:
+    """Analyze fitness form using Gemini Vision."""
     try:
-        # Load the uploaded video artifact
-        video_artifact = await context.load_artifact(filename=video_filename)
+        logger.info(f"Analyzing fitness video: {video_data}")
         
-        if not video_artifact or not video_artifact.inline_data:
-            return f"Could not find video file '{video_filename}'. Please upload a video first."
+        # Load video from artifacts
+        video_filename = video_data.get('video')
+        if not video_filename:
+            return {"error": "No video filename provided"}
+            
+        video_part = await tool_context.load_artifact(filename=video_filename)
+        if not video_part:
+            return {"error": f"Could not load video: {video_filename}"}
         
-        # Create the analysis prompt for Gemini Vision
-        analysis_prompt = f"""
-        As an expert fitness coach with 6+ years of experience, analyze this {exercise_type} form video.
+        # Initialize Gemini model for video analysis
+        model = genai.GenerativeModel('gemini-2.5-flash')
         
-        Provide detailed feedback on:
-        1. Exercise identification (if exercise_type is unknown)
-        2. Overall form quality (Excellent/Good/Needs Work/Concerning)
-        3. Body positioning and alignment
-        4. Range of motion
-        5. Movement control and tempo
-        6. Common form errors observed
-        7. 3 specific coaching cues to improve
-        8. Safety concerns (if any)
-        9. What they're doing well (positive reinforcement)
+        # Structured analysis prompt for fitness
+        analysis_prompt = """
+        Analyze this exercise video and provide detailed form feedback in JSON format:
+        {
+          "exercise_name": "string",
+          "total_reps": number,
+          "rep_timing": ["timestamp array"],
+          "form_score": number (1-10 scale),
+          "form_critique": "detailed biomechanical analysis",
+          "safety_concerns": ["list of safety issues"],
+          "recommendations": ["specific improvement suggestions"],
+          "key_muscles": ["primary muscles worked"],
+          "common_mistakes": ["mistakes observed in video"]
+        }
         
-        Use an encouraging but direct coaching style. Focus on actionable improvements.
+        Focus on:
+        - Proper biomechanics and joint alignment
+        - Range of motion completeness
+        - Movement tempo and control
+        - Potential injury risks
+        - Specific corrections needed
         """
         
-        # Create content with video for Gemini Vision analysis
-        content = [
-            types.Part.from_text(analysis_prompt),
-            video_artifact  # The uploaded video
-        ]
+        # Generate analysis using Gemini Vision
+        response = model.generate_content([
+            video_part,
+            analysis_prompt
+        ])
         
-        # Get Gemini's analysis of the video
-        model = context.get_model("gemini-2.5-flash")  # Use vision-capable model
-        response = await model.generate_content_async(content)
+        # Parse and structure response
+        analysis_text = response.text
         
-        # Return the AI's analysis
-        return f"## Form Analysis for {exercise_type}\n\n{response.text}"
+        # Save analysis as artifact for future reference
+        timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+        analysis_filename = f"form_analysis_{timestamp}.json"
+        
+        from google.genai.types import Part
+        analysis_part = Part.from_text(analysis_text)
+        tool_context.save_artifact(analysis_filename, analysis_part)
+        
+        return {
+            "status": "success",
+            "analysis": analysis_text,
+            "analysis_file": analysis_filename,
+            "video_processed": video_filename
+        }
         
     except Exception as e:
-        return f"Error analyzing video: {str(e)}. Make sure you've uploaded a video file first."
+        logger.error(f"Form analysis failed: {str(e)}")
+        return {"error": f"Analysis failed: {str(e)}"}
 
-# Create the fitness coaching agent
-root_agent = Agent(
-    name="fitness_form_coach", 
-    model="gemini-2.5-flash",
-    description="Expert fitness coach that analyzes workout videos using AI vision.",
-    instruction="""You are an expert fitness coach with 6+ years of experience. You can analyze workout form videos using computer vision.
+def create_complete_fitness_system():
+    """Create complete ADK system for fitness form analysis."""
+    
+    # Initialize services
+    artifact_service = GcsArtifactService()  # Use GCS for production
+    session_service = InMemorySessionService()
+    
+    # Create specialized fitness form analyzer
+    fitness_agent = LlmAgent(
+        name="fitness_form_expert",
+        model="gemini-2.5-flash",
+        description="Professional fitness form analysis using Gemini Vision",
+        instruction="""
+        You are an expert fitness coach specializing in biomechanical analysis.
+        
+        When users upload workout videos:
+        1. Use analyze_fitness_form tool to process videos with Gemini Vision
+        2. Provide comprehensive form feedback covering technique, safety, and improvements
+        3. Count repetitions accurately with timing analysis
+        4. Identify muscle activation patterns and movement quality
+        5. Offer personalized recommendations based on observed form issues
+        
+        Always prioritize safety and proper biomechanics in your analysis.
+        """,
+        tools=[
+            FunctionTool(analyze_fitness_form),
+            FunctionTool(check_available_videos),
+            FunctionTool(save_processed_video)
+        ]
+    )
+    
+    # Initialize runner with video processing capabilities
+    runner = Runner(
+        agent=fitness_agent,
+        app_name="fitness_form_analyzer",
+        session_service=session_service,
+        artifact_service=artifact_service
+    )
+    
+    return runner
 
-When users want form analysis:
-1. Ask them to upload their workout video if they haven't already
-2. Use the analyze_workout_form tool with the video filename and exercise type
-3. Provide detailed, actionable coaching feedback
-
-Your expertise covers:
-- All major exercises (squats, deadlifts, bench press, etc.)
-- Movement quality assessment
-- Injury prevention
-- Performance optimization
-
-Your coaching style:
-- Safety first
-- Encouraging but honest
-- Specific, actionable cues
-- Explain the "why" behind corrections
-
-Example interactions:
-User: "Can you check my squat form?"
-You: "I'd be happy to analyze your squat form! Please upload a video of your squat and I'll give you detailed feedback."
-
-User: [uploads video] "Here's my squat"
-You: [Use analyze_workout_form tool with the video filename and "squat"]""",
-    tools=[analyze_workout_form],
-)
+# Production deployment setup
+if __name__ == "__main__":
+    # Create the fitness analysis system
+    fitness_runner = create_complete_fitness_system()
+    
+    # Run the web interface for video uploads
+    fitness_runner.run_web_ui()  # Access at http://localhost:8000
