@@ -3,90 +3,125 @@ from google.adk.agents import Agent
 from google.adk.tools import ToolContext
 from google import genai
 import os
+import uuid
 
-async def analyze_exercise_video(tool_context: ToolContext) -> str:
+async def analyze_body_fat(tool_context: ToolContext) -> str:
     """
-    Analyze uploaded video to identify exercise using real Gemini Vision
+    Analyze uploaded image to estimate body fat percentage
     """
     try:
-        # Debug: Check user content for video
+        print("🔍 DEBUG: Starting body fat analysis...")
         print(f"🔍 DEBUG: User content: {tool_context.user_content}")
         
-        # Look for video in the user content
-        video_part = None
+        # Look for image in the user content
+        image_part = None
         if tool_context.user_content and tool_context.user_content.parts:
-            for part in tool_context.user_content.parts:
-                print(f"🔍 DEBUG: Part type: {type(part)}, has inline_data: {hasattr(part, 'inline_data')}")
+            print(f"🔍 DEBUG: Found {len(tool_context.user_content.parts)} parts in user content")
+            for i, part in enumerate(tool_context.user_content.parts):
+                print(f"🔍 DEBUG: Part {i}: type={type(part)}, has_inline_data={hasattr(part, 'inline_data')}")
                 if hasattr(part, 'inline_data') and part.inline_data:
-                    print(f"🔍 DEBUG: Found inline data with mime_type: {part.inline_data.mime_type}")
-                    if part.inline_data.mime_type.startswith('video/'):
-                        video_part = part
+                    print(f"🔍 DEBUG: Part {i} mime_type: {part.inline_data.mime_type}")
+                    if part.inline_data.mime_type.startswith('image/'):
+                        image_part = part
+                        print(f"📸 DEBUG: Found image part at index {i}!")
                         break
+                if hasattr(part, 'text'):
+                    print(f"🔍 DEBUG: Part {i} text: {part.text[:50]}...")
         
-        if not video_part:
-            return "No video found in your message. Please upload a workout video!"
+        if not image_part:
+            print("❌ DEBUG: No image found in user content")
+            return "No image found. Please upload a clear photo showing your physique for body fat analysis!"
         
-        print(f"🎥 DEBUG: Found video with mime_type: {video_part.inline_data.mime_type}")
+        print(f"📸 DEBUG: Found image with mime_type: {image_part.inline_data.mime_type}")
+        print(f"📸 DEBUG: Image data size: {len(image_part.inline_data.data)} bytes")
+        
+        # Save image locally so you can verify it's working
+        file_extension = "jpg"
+        if "png" in image_part.inline_data.mime_type:
+            file_extension = "png"
+        elif "gif" in image_part.inline_data.mime_type:
+            file_extension = "gif"
+        
+        local_filename = f"uploaded_image_{uuid.uuid4().hex[:8]}.{file_extension}"
+        local_path = f"/tmp/{local_filename}"
+        
+        with open(local_path, 'wb') as f:
+            f.write(image_part.inline_data.data)
+        
+        print(f"💾 DEBUG: Saved image locally to: {local_path}")
+        
+        # Also save to current directory so you can easily see it
+        current_dir_path = f"./{local_filename}"
+        with open(current_dir_path, 'wb') as f:
+            f.write(image_part.inline_data.data)
+        
+        print(f"💾 DEBUG: ALSO saved image to current directory: {current_dir_path}")
         
         # Initialize Gemini client
         api_key = os.getenv("GOOGLE_API_KEY")
         if not api_key:
+            print("❌ DEBUG: No GOOGLE_API_KEY found")
             return "Error: GOOGLE_API_KEY not found in environment"
         
+        print("🤖 DEBUG: Initializing Gemini client...")
         client = genai.Client(api_key=api_key)
         
-        # Save video temporarily for Gemini upload
-        temp_video_path = f"/tmp/workout_video.mov"
-        with open(temp_video_path, 'wb') as f:
-            f.write(video_part.inline_data.data)
+        # Upload image to Gemini
+        print(f"⬆️ DEBUG: Uploading image to Gemini: {local_path}")
+        myfile = client.files.upload(file=local_path)
+        print(f"⬆️ DEBUG: Successfully uploaded! File URI: {myfile.uri}")
         
-        print(f"💾 DEBUG: Saved temp file: {temp_video_path}")
-        
-        # Upload video to Gemini
-        myfile = client.files.upload(file=temp_video_path)
-        print(f"⬆️ DEBUG: Uploaded to Gemini, file URI: {myfile.uri}")
-        
-        # Wait for file to be ready (Gemini needs processing time)
+        # Wait a bit for processing
         import time
-        print(f"⏳ DEBUG: Waiting 8 seconds for file to be ready...")
-        time.sleep(8)  # Wait 8 seconds for processing
+        print("⏳ DEBUG: Waiting 3 seconds for Gemini processing...")
+        time.sleep(3)
         
         # Analyze with Gemini Vision
+        print("🧠 DEBUG: Sending to Gemini for analysis...")
         response = client.models.generate_content(
             model="gemini-2.0-flash", 
             contents=[
                 myfile, 
-                """Analyze this exercise video and tell me:
-                1. What exercise is being performed?
-                2. How many reps do you count?
-                3. Basic form assessment (good/needs work)
-                4. One key improvement tip
-                
-                Keep it simple and encouraging!"""
+                """Look at this person's physique and estimate their body fat percentage.
+
+                Provide:
+                1. Estimated body fat percentage range (e.g., "15-18%")
+                2. Body composition category (lean, average, above average, etc.)
+                3. Visible muscle definition level
+                4. Key visual indicators you used for the estimate
+                5. General fitness observations
+
+                Be professional and encouraging. Remember this is an estimate based on visual appearance only."""
             ]
         )
         
-        print(f"🤖 DEBUG: Got response from Gemini")
+        print(f"✅ DEBUG: Got response from Gemini!")
+        print(f"📝 DEBUG: Response length: {len(response.text)} characters")
         
-        # Clean up temp file
-        os.remove(temp_video_path)
-        print(f"🗑️ DEBUG: Cleaned up temp file")
+        # Clean up temp file (but keep the one in current directory)
+        try:
+            os.remove(local_path)
+            print(f"🗑️ DEBUG: Cleaned up temp file: {local_path}")
+        except:
+            print(f"⚠️ DEBUG: Could not clean up temp file: {local_path}")
         
-        return response.text
+        return f"🏋️ **Body Fat Analysis Complete!**\n\n{response.text}\n\n*Image saved as: {current_dir_path}*"
         
     except Exception as e:
         print(f"💥 DEBUG: Error occurred: {str(e)}")
-        return f"Error analyzing video: {str(e)}"
+        import traceback
+        print(f"💥 DEBUG: Full traceback: {traceback.format_exc()}")
+        return f"Error analyzing image: {str(e)}"
 
 # Create the agent
 root_agent = Agent(
-    name="exercise_detector",
+    name="body_fat_analyzer",
     model="gemini-2.5-flash",
-    description="Analyzes exercise videos using Gemini Vision",
-    instruction="""You are a friendly fitness coach who analyzes workout videos.
+    description="Analyzes body composition from photos using AI vision",
+    instruction="""You are a friendly fitness assessment expert who can estimate body fat percentage from photos.
 
-When users upload a video, use the analyze_exercise_video tool to get real AI analysis of their form and technique.
+When users upload a photo of themselves, use the analyze_body_fat tool to get AI analysis of their body composition.
 
-Be encouraging and helpful!""",
-    tools=[analyze_exercise_video],
+Be professional, encouraging, and remind them that this is an estimate for general guidance only.""",
+    tools=[analyze_body_fat],
 )
