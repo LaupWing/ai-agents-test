@@ -53,9 +53,9 @@ async def analyze_exercise_form(tool_context: ToolContext) -> str:
         print(f"💾 DEBUG: Saved video locally to: {local_path}")
         
         # Also save to current directory so you can easily see it
-        current_dir_path = f"./{local_filename}"
-        with open(current_dir_path, 'wb') as f:
-            f.write(video_part.inline_data.data)
+        # current_dir_path = f"./{local_filename}"
+        # with open(current_dir_path, 'wb') as f:
+        #     f.write(video_part.inline_data.data)
         
         print(f"💾 DEBUG: ALSO saved video to current directory: {current_dir_path}")
         
