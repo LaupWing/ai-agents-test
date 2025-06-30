@@ -57,7 +57,7 @@ async def analyze_exercise_form(tool_context: ToolContext) -> str:
         # with open(current_dir_path, 'wb') as f:
         #     f.write(video_part.inline_data.data)
         
-        print(f"💾 DEBUG: ALSO saved video to current directory: {current_dir_path}")
+        # print(f"💾 DEBUG: ALSO saved video to current directory: {current_dir_path}")
         
         # Initialize Gemini client
         api_key = os.getenv("GOOGLE_API_KEY")
