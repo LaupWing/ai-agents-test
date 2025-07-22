@@ -9,3 +9,8 @@ from google.genai import types # For creating message Content/Parts
 import warnings
 # Ignore all warnings
 warnings.filterwarnings("ignore")
+
+import logging
+logging.basicConfig(level=logging.ERROR)
+
+print("Libraries imported.")
