@@ -14,19 +14,9 @@ logging.basicConfig(level=logging.ERROR)
 
 print("Libraries imported.")
 
-# @title Configure API Keys (Replace with your actual keys!)
-
 # --- IMPORTANT: Replace placeholders with your real API keys ---
-
-# Gemini API Key (Get from Google AI Studio: https://aistudio.google.com/app/apikey)
 os.environ["GOOGLE_API_KEY"] = os.getenv("GOOGLE_API_KEY")
-
-# [Optional]
-# OpenAI API Key (Get from OpenAI Platform: https://platform.openai.com/api-keys)
 os.environ['OPENAI_API_KEY'] = os.getenv("OPENAI_API_KEY")
-
-# [Optional]
-# Anthropic API Key (Get from Anthropic Console: https://console.anthropic.com/settings/keys)
 os.environ['ANTHROPIC_API_KEY'] = os.getenv("ANTHROPIC_API_KEY")
 
 # --- Verify Keys (Optional Check) ---
