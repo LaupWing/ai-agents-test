@@ -17,3 +17,8 @@ initial_state = {
         Loves it when people like and subscribe to his YouTube channel.
     """
 }
+
+
+APP_NAME = "weather_tutorial_app"
+USER_ID = "user_1"
+SESSION_ID = "session_001"  # Using a fixed ID for simplicity
