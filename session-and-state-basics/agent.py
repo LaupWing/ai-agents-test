@@ -19,6 +19,16 @@ initial_state = {
 }
 
 
-APP_NAME = "weather_tutorial_app"
-USER_ID = "user_1"
-SESSION_ID = "session_001"  # Using a fixed ID for simplicity
+# Create a NEW session
+APP_NAME = "Brandon Bot"
+USER_ID = "brandon_hancock"
+SESSION_ID = str(uuid.uuid4())
+stateful_session = session_service_stateful.create_session(
+    app_name=APP_NAME,
+    user_id=USER_ID,
+    session_id=SESSION_ID,
+    state=initial_state,
+)
+
+print("CREATED NEW SESSION:")
+print(f"\tSession ID: {SESSION_ID}")
