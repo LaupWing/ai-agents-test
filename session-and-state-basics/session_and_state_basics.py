@@ -2,6 +2,7 @@ from dotenv import load_dotenv
 from google.adk.runners import Runner
 from google.genai import types
 from google.adk.session import InMemorySessionService
+from question_answering_agent import question_answering_agent
 
 load_dotenv() 
 
