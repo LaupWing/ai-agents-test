@@ -32,3 +32,13 @@ stateful_session = session_service_stateful.create_session(
 
 print("CREATED NEW SESSION:")
 print(f"\tSession ID: {SESSION_ID}")
+
+runner = Runner(
+    agent=question_answering_agent,
+    app_name=APP_NAME,
+    session_service=session_service_stateful,
+)
+
+new_message = types.Content(
+    role="user", parts=[types.Part(text="What is Brandon's favorite TV show?")]
+)
