@@ -74,7 +74,7 @@ async def main():
     )
 
     new_message = types.Content(
-        role="user", parts=[types.Part(text="What is Brandon's favorite TV show?")]
+        role="user", parts=[types.Part(text="What is the weather like in London?")]
     )
 
     async for event in runner.run_async(
