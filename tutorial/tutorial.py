@@ -8,14 +8,14 @@ from question_answering_agent import question_answering_agent
 
 load_dotenv()
 
+session_service = InMemorySessionService()
+
 # Constants
-APP_NAME = "Brandon Bot"
-USER_ID = "brandon_hancock"
+APP_NAME = "weather_tutorial_app"
+USER_ID = "user_1"
 SESSION_ID = str(uuid.uuid4())
-MODEL_GEMINI_2_0_FLASH = "gemini-2.0-flash"
+AGENT_MODEL = "gemini-2.0-flash"
 
-
-# @title Define the get_weather Tool
 def get_weather(city: str) -> dict:
     """Retrieves the current weather report for a specified city.
 
@@ -43,40 +43,34 @@ def get_weather(city: str) -> dict:
     else:
         return {"status": "error", "error_message": f"Sorry, I don't have weather information for '{city}'."}
 
-# Example tool usage (optional test)
-print(get_weather("New York"))
-print(get_weather("Paris"))
-
-# Initial user state
-initial_state = {
-    "user_name": "Brandon Hancock",
-    "user_preferences": """
-        I like to play Pickleball, Disc Golf, and Tennis.
-        My favorite food is Mexican.
-        My favorite TV show is Game of Thrones.
-        Loves it when people like and subscribe to his YouTube channel.
-    """
-}
+weather_agent = Agent(
+    name="weather_agent_v1",
+    model=AGENT_MODEL, # Can be a string for Gemini or a LiteLlm object
+    description="Provides weather information for specific cities.",
+    instruction="You are a helpful weather assistant. "
+                "When the user asks for the weather in a specific city, "
+                "use the 'get_weather' tool to find the information. "
+                "If the tool returns an error, inform the user politely. "
+                "If the tool is successful, present the weather report clearly.",
+    tools=[get_weather], # Pass the function directly
+)
 
 # Async main
 async def main():
-    session_service_stateful = InMemorySessionService()
-
     # Await session creation
-    await session_service_stateful.create_session(
+    await session_service.create_session(
         app_name=APP_NAME,
         user_id=USER_ID,
-        session_id=SESSION_ID,
-        state=initial_state,
+        session_id=SESSION_ID
     )
 
     print("CREATED NEW SESSION:")
     print(f"\tSession ID: {SESSION_ID}")
 
     runner = Runner(
-        agent=question_answering_agent,
+        agent=weather_agent,
         app_name=APP_NAME,
-        session_service=session_service_stateful,
+        session_service=session_service,
     )
 
     new_message = types.Content(
@@ -93,7 +87,7 @@ async def main():
                 print(f"Final Response: {event.content.parts[0].text}")
 
     print("==== Session Event Exploration ====")
-    session = await session_service_stateful.get_session(
+    session = await session_service.get_session(
         app_name=APP_NAME,
         user_id=USER_ID,
         session_id=SESSION_ID,
