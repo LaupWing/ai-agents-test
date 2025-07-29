@@ -16,6 +16,8 @@ APP_NAME = "weather_tutorial_app"
 USER_ID = "user_1"
 SESSION_ID = str(uuid.uuid4())
 AGENT_MODEL = "gemini-2.0-flash"
+weather_agent_gpt = None    # Initialize to None
+runner_gpt = None           # Initialize runner to None
 
 def get_weather(city: str) -> dict:
     """Retrieves the current weather report for a specified city.
