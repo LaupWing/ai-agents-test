@@ -50,57 +50,59 @@ def get_weather(city: str) -> dict:
 
 # Async main
 async def main():
+    try:
+        weather_agent = Agent(
+            name="weather_agent_v1",
+            model=AGENT_MODEL, # Can be a string for Gemini or a LiteLlm object
+            description="Provides weather information for specific cities.",
+            instruction="You are a helpful weather assistant. "
+                        "When the user asks for the weather in a specific city, "
+                        "use the 'get_weather' tool to find the information. "
+                        "If the tool returns an error, inform the user politely. "
+                        "If the tool is successful, present the weather report clearly.",
+            tools=[get_weather], # Pass the function directly
+        )
+        # Await session creation
+        await session_service.create_session(
+            app_name=APP_NAME,
+            user_id=USER_ID,
+            session_id=SESSION_ID
+        )
 
-    weather_agent = Agent(
-        name="weather_agent_v1",
-        model=AGENT_MODEL, # Can be a string for Gemini or a LiteLlm object
-        description="Provides weather information for specific cities.",
-        instruction="You are a helpful weather assistant. "
-                    "When the user asks for the weather in a specific city, "
-                    "use the 'get_weather' tool to find the information. "
-                    "If the tool returns an error, inform the user politely. "
-                    "If the tool is successful, present the weather report clearly.",
-        tools=[get_weather], # Pass the function directly
-    )
-    # Await session creation
-    await session_service.create_session(
-        app_name=APP_NAME,
-        user_id=USER_ID,
-        session_id=SESSION_ID
-    )
+        print("CREATED NEW SESSION:")
+        print(f"\tSession ID: {SESSION_ID}")
 
-    print("CREATED NEW SESSION:")
-    print(f"\tSession ID: {SESSION_ID}")
+        runner = Runner(
+            agent=weather_agent,
+            app_name=APP_NAME,
+            session_service=session_service,
+        )
 
-    runner = Runner(
-        agent=weather_agent,
-        app_name=APP_NAME,
-        session_service=session_service,
-    )
+        new_message = types.Content(
+            role="user", parts=[types.Part(text="How about Amsterdam?")]
+        )
 
-    new_message = types.Content(
-        role="user", parts=[types.Part(text="How about Amsterdam?")]
-    )
+        async for event in runner.run_async(
+            user_id=USER_ID,
+            session_id=SESSION_ID,
+            new_message=new_message,
+        ):
+            if event.is_final_response():
+                if event.content and event.content.parts:
+                    print(f"Final Response: {event.content.parts[0].text}")
 
-    async for event in runner.run_async(
-        user_id=USER_ID,
-        session_id=SESSION_ID,
-        new_message=new_message,
-    ):
-        if event.is_final_response():
-            if event.content and event.content.parts:
-                print(f"Final Response: {event.content.parts[0].text}")
+        print("==== Session Event Exploration ====")
+        session = await session_service.get_session(
+            app_name=APP_NAME,
+            user_id=USER_ID,
+            session_id=SESSION_ID,
+        )
 
-    print("==== Session Event Exploration ====")
-    session = await session_service.get_session(
-        app_name=APP_NAME,
-        user_id=USER_ID,
-        session_id=SESSION_ID,
-    )
-
-    print("==== Final Session State ====")
-    for key, value in session.state.items():
-        print(f"{key}: {value}")
+        print("==== Final Session State ====")
+        for key, value in session.state.items():
+            print(f"{key}: {value}")
+    except Exception as e:
+        print(f"❌ Could not create or run GPT agent '{MODEL_GPT_4O}'. Check API Key and model name. Error: {e}")
 
 # Run the async main
 asyncio.run(main())
