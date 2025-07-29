@@ -2,9 +2,9 @@ import uuid
 import asyncio
 from dotenv import load_dotenv
 from google.adk.runners import Runner
+from google.adk.agents import Agent
 from google.genai import types
 from google.adk.sessions import InMemorySessionService
-from question_answering_agent import question_answering_agent
 
 load_dotenv()
 
@@ -74,7 +74,7 @@ async def main():
     )
 
     new_message = types.Content(
-        role="user", parts=[types.Part(text="What is the weather like in London?")]
+        role="user", parts=[types.Part(text="How about Amsterdam?")]
     )
 
     async for event in runner.run_async(
