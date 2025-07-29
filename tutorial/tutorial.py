@@ -19,6 +19,29 @@ AGENT_MODEL = "gemini-2.0-flash"
 weather_agent_gpt = None    # Initialize to None
 runner_gpt = None           # Initialize runner to None
 
+async def call_agent_async(query: str, runner, user_id, session_id):
+    """Sends a query to the agent and prints the final response."""
+    print(f"\n>>> User Query: {query}")
+
+    # Prepare the user's message in ADK format
+    content = types.Content(role='user', parts=[types.Part(text=query)])
+
+    final_response_text = "Agent did not produce a final response." # Default response
+
+    async for event in runner.run_async(
+        user_id=user_id,
+        session_id=session_id,
+        new_message=content,
+    ):
+        if event.is_final_response():
+            if event.content and event.content.parts:
+                final_response_text = event.content.parts[0].text
+                print(f"Final Response: {final_response_text}")
+            else:
+                print("No content in final response.")
+    
+    return final_response_text
+
 def get_weather(city: str) -> dict:
     """Retrieves the current weather report for a specified city.
 
