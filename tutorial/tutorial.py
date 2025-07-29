@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from google.adk.runners import Runner
 from google.adk.agents import Agent
 from google.genai import types
+from google.adk.models.lite_llm import LiteLlm
 from google.adk.sessions import InMemorySessionService
 
 load_dotenv()
