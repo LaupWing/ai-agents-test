@@ -39,8 +39,9 @@ async def call_agent_async(query: str, runner, user_id, session_id):
                 print(f"Final Response: {final_response_text}")
             else:
                 print("No content in final response.")
+            break;
     
-    return final_response_text
+    print(f"<<< Agent Response: {final_response_text}")
 
 def get_weather(city: str) -> dict:
     """Retrieves the current weather report for a specified city.
