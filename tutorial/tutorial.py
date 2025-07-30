@@ -105,7 +105,7 @@ async def main():
         await call_agent_async("What is the weather in London?", runner, USER_ID, SESSION_ID)
         
     except Exception as e:
-        print(f"❌ Could not create or run GPT agent '{MODEL_GPT_4O}'. Check API Key and model name. Error: {e}")
+        print(f"❌ Could not create or run GPT agent '{AGENT_MODEL}'. Check API Key and model name. Error: {e}")
 
 # Run the async main
 asyncio.run(main())
