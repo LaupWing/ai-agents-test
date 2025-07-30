@@ -20,8 +20,6 @@ async def main():
         session_id="claude_session"
     )
     
-
-
     runner_gpt = build_runner(build_gpt_agent(), session_gpt)
     runner_claude = build_runner(build_claude_agent(), session_claude)
 
