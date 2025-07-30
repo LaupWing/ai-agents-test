@@ -102,29 +102,8 @@ async def main():
             session_service=session_service,
         )
 
-        new_message = types.Content(
-            role="user", parts=[types.Part(text="How about Lndon?")]
-        )
-
-        async for event in runner.run_async(
-            user_id=USER_ID,
-            session_id=SESSION_ID,
-            new_message=new_message,
-        ):
-            if event.is_final_response():
-                if event.content and event.content.parts:
-                    print(f"Final Response: {event.content.parts[0].text}")
-
-        print("==== Session Event Exploration ====")
-        session = await session_service.get_session(
-            app_name=APP_NAME,
-            user_id=USER_ID,
-            session_id=SESSION_ID,
-        )
-
-        print("==== Final Session State ====")
-        for key, value in session.state.items():
-            print(f"{key}: {value}")
+        await call_agent_async("What is the weather in London?", runner, USER_ID, SESSION_ID)
+        
     except Exception as e:
         print(f"❌ Could not create or run GPT agent '{MODEL_GPT_4O}'. Check API Key and model name. Error: {e}")
 
