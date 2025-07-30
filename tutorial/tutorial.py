@@ -103,7 +103,7 @@ async def main():
         )
 
         new_message = types.Content(
-            role="user", parts=[types.Part(text="How about Amsterdam?")]
+            role="user", parts=[types.Part(text="How about Lndon?")]
         )
 
         async for event in runner.run_async(
