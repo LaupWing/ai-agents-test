@@ -7,11 +7,19 @@ from utils.interaction import call_agent_async
 from config import APP_NAME, USER_ID
 
 async def main():
-    session_gpt = await create_session_service().create_session(APP_NAME, USER_ID, "gpt_session")
-    session_claude = await create_session_service().create_session(APP_NAME, USER_ID, "claude_session")
+    session_gpt = await create_session_service().create_session(
+        app_name=APP_NAME, 
+        user_id=USER_ID, 
+        session_id="gpt_session"
+    )
+    session_claude = await create_session_service().create_session(
+        app_name=APP_NAME, 
+        user_id=USER_ID, 
+        session_id="claude_session"
+    )
 
-    runner_gpt = build_runner(build_gpt_agent(), "gpt_session")
-    runner_claude = build_runner(build_claude_agent(), "claude_session")
+    runner_gpt = build_runner(build_gpt_agent(), session_gpt)
+    runner_claude = build_runner(build_claude_agent(), session_claude)
 
     await call_agent_async("What's the weather in Tokyo?", runner_gpt, USER_ID, "gpt_session")
     await call_agent_async("What's the weather in London?", runner_claude, USER_ID, "claude_session")
