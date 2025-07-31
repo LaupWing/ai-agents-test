@@ -23,7 +23,7 @@ async def main():
     runner_gpt = build_runner(build_gpt_agent(), session_gpt)
     runner_claude = build_runner(build_claude_agent(), session_claude)
 
-    await call_agent_async("What's the weather in Amsterdm?", runner_gpt, USER_ID, "gpt_session")
+    await call_agent_async("What's the weather in lndon?", runner_gpt, USER_ID, "gpt_session")
     await call_agent_async("What's the weather in Amsterdm?", runner_claude, USER_ID, "claude_session")
 
 if __name__ == "__main__":
