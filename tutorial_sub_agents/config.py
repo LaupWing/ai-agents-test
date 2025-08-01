@@ -6,8 +6,9 @@ load_dotenv()
 os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
 os.environ["ANTHROPIC_API_KEY"] = os.getenv("ANTHROPIC_API_KEY")
 
-APP_NAME = "weather_bot_adk"
-USER_ID = "user_123"
+APP_NAME = "weather_tutorial_agent_team"
+USER_ID = "user_1_agent_team"
+SESSION_ID = "session_001_agent_team"
 
 # Model constants
 MODEL_GPT_4O = "openai/gpt-4o"
