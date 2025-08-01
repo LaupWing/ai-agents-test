@@ -17,12 +17,11 @@ def get_weather(city: str) -> dict:
 
 
 if greeting_agent and farewell_agent:
-    # Let's use a capable Gemini model for the root agent to handle orchestration
     root_agent_model = MODEL_GPT_4O 
 
     weather_agent_team = Agent(
         name="weather_agent_v2",
-        model=root_agent_model,
+        model=MODEL_GPT_4O,
         description="The main coordinator agent. Handles weather requests and delegates greetings/farewells to specialists.",
         instruction="You are the main Weather Agent coordinating a team. Your primary responsibility is to provide weather information. "
                     "Use the 'get_weather' tool ONLY for specific weather requests (e.g., 'weather in London'). "

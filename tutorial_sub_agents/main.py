@@ -1,30 +1,42 @@
 import asyncio
-from agents.weather_gpt import build_gpt_agent
-from agents.weather_claude import build_claude_agent
-from runners.runner_factory import build_runner
 from utils.interaction import call_agent_async
-from config import APP_NAME, USER_ID
+from config import APP_NAME, USER_ID, SESSION_ID
+from agents.weather_agent.agent import weather_agent_team
+from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
 
 async def main():
-    session_gpt = InMemorySessionService()
-    await session_gpt.create_session(
+    print("\n--- Testing Agent Team Delegation ---")
+    session_service = InMemorySessionService()
+    session  = session_service.create_session(
         app_name=APP_NAME,
         user_id=USER_ID,
-        session_id="gpt_session"
+        session_id=SESSION_ID
     )
-    session_claude = InMemorySessionService()
-    await session_claude.create_session(
-        app_name=APP_NAME,
-        user_id=USER_ID,
-        session_id="claude_session"
-    )
+    print(f"Session created: App='{APP_NAME}', User='{USER_ID}', Session='{SESSION_ID}'")
     
-    runner_gpt = build_runner(build_gpt_agent(), session_gpt)
-    runner_claude = build_runner(build_claude_agent(), session_claude)
+    runner_agent_team = Runner(
+        agent=weather_agent_team,
+        app_name=APP_NAME,
+        session_service=session_service
+    )
 
-    await call_agent_async("What's the weather in lndon?", runner_gpt, USER_ID, "gpt_session")
-    await call_agent_async("What's the weather in Amsterdm?", runner_claude, USER_ID, "claude_session")
+    # --- Interactions using await (correct within async def) ---
+    await call_agent_async(query = "Hello there!",
+        runner=runner_agent_team,
+        user_id=USER_ID,
+        session_id=SESSION_ID
+    )
+    await call_agent_async(query = "What is the weather in New York?",
+        runner=runner_agent_team,
+        user_id=USER_ID,
+        session_id=SESSION_ID
+    )
+    await call_agent_async(query = "Thanks, bye!",
+        runner=runner_agent_team,
+        user_id=USER_ID,
+        session_id=SESSION_ID
+    )
 
 if __name__ == "__main__":
     asyncio.run(main())
