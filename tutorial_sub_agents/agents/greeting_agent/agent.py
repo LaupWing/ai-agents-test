@@ -15,22 +15,20 @@ def say_hello(name: Optional[str] = None) -> str:
         greeting = f"Hello, {name}!"
         print(f"--- Tool: say_hello called with name: {name} ---")
     else:
-        greeting = "Hello there!" # Default greeting if name is None or not explicitly passed
+        greeting = "Hello there!"
         print(f"--- Tool: say_hello called without a specific name (name_arg_value: {name}) ---")
     return greeting
 
 greeting_agent = None
 try:
     greeting_agent = Agent(
-        # Using a potentially different/cheaper model for a simple task
         model = MODEL_GPT_4O,
-        # model=LiteLlm(model=MODEL_GPT_4O), # If you would like to experiment with other models
         name="greeting_agent",
         instruction="You are the Greeting Agent. Your ONLY task is to provide a friendly greeting to the user. "
                     "Use the 'say_hello' tool to generate the greeting. "
                     "If the user provides their name, make sure to pass it to the tool. "
                     "Do not engage in any other conversation or tasks.",
-        description="Handles simple greetings and hellos using the 'say_hello' tool.", # Crucial for delegation
+        description="Handles simple greetings and hellos using the 'say_hello' tool.",
         tools=[say_hello],
     )
     print(f"✅ Agent '{greeting_agent.name}' created using model '{greeting_agent.model}'.")
