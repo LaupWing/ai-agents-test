@@ -1,6 +1,7 @@
 from config import MODEL_GPT_4O
 from google.adk.agents import Agent
 from agents.greeting_agent.agent import greeting_agent
+from google.adk.models.lite_llm import LiteLlm
 from agents.farwell_agent.agent import farewell_agent
 
 def get_weather(city: str) -> dict:
@@ -21,7 +22,7 @@ if greeting_agent and farewell_agent:
 
     weather_agent_team = Agent(
         name="weather_agent_v2",
-        model=MODEL_GPT_4O,
+        model=LiteLlm(model=MODEL_GPT_4O),
         description="The main coordinator agent. Handles weather requests and delegates greetings/farewells to specialists.",
         instruction="You are the main Weather Agent coordinating a team. Your primary responsibility is to provide weather information. "
                     "Use the 'get_weather' tool ONLY for specific weather requests (e.g., 'weather in London'). "

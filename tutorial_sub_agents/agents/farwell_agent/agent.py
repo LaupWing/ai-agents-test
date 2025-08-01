@@ -1,5 +1,6 @@
 from config import MODEL_GPT_4O
 from google.adk.agents import Agent
+from google.adk.models.lite_llm import LiteLlm
 
 def say_goodbye() -> str:
     """Provides a simple farewell message to conclude the conversation."""
@@ -9,7 +10,7 @@ def say_goodbye() -> str:
 farewell_agent = None
 try:
     farewell_agent = Agent(
-        model = MODEL_GPT_4O,
+        model = LiteLlm(model=MODEL_GPT_4O),
         name="farewell_agent",
         instruction="You are the Farewell Agent. Your ONLY task is to provide a polite goodbye message. "
                     "Use the 'say_goodbye' tool when the user indicates they are leaving or ending the conversation "

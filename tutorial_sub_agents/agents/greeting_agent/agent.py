@@ -1,5 +1,6 @@
 from config import MODEL_GPT_4O
 from google.adk.agents import Agent
+from google.adk.models.lite_llm import LiteLlm
 from typing import Optional
 
 def say_hello(name: Optional[str] = None) -> str:
@@ -22,7 +23,7 @@ def say_hello(name: Optional[str] = None) -> str:
 greeting_agent = None
 try:
     greeting_agent = Agent(
-        model = MODEL_GPT_4O,
+        model = LiteLlm(model=MODEL_GPT_4O),
         name="greeting_agent",
         instruction="You are the Greeting Agent. Your ONLY task is to provide a friendly greeting to the user. "
                     "Use the 'say_hello' tool to generate the greeting. "
