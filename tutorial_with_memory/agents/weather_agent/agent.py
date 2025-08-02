@@ -2,19 +2,54 @@ from config import MODEL_GPT_4O
 from google.adk.agents import Agent
 from agents.greeting_agent.agent import greeting_agent
 from google.adk.models.lite_llm import LiteLlm
+from google.adk.tools.tool_context import ToolContext
 from agents.farwell_agent.agent import farewell_agent
 
-def get_weather(city: str) -> dict:
+def get_weather_stateful(city: str, tool_context: ToolContext) -> dict:
+    """Retrieves weather, converts temp unit based on session state."""
+    print(f"--- Tool: get_weather_stateful called for {city} ---")
+
+    # --- Read preference from state ---
+    preferred_unit = tool_context.state.get("user_preference_temperature_unit", "Celsius") # Default to Celsius
+    print(f"--- Tool: Reading state 'user_preference_temperature_unit': {preferred_unit} ---")
+
     city_normalized = city.lower().replace(" ", "")
+
+    # Mock weather data (always stored in Celsius internally)
     mock_weather_db = {
-        "newyork": {"status": "success", "report": "Sunny in New York, 25°C"},
-        "london": {"status": "success", "report": "Cloudy in London, 15°C"},
-        "tokyo": {"status": "success", "report": "Rainy in Tokyo, 18°C"},
+        "newyork": {"temp_c": 25, "condition": "sunny"},
+        "london": {"temp_c": 15, "condition": "cloudy"},
+        "tokyo": {"temp_c": 18, "condition": "light rain"},
     }
-    return mock_weather_db.get(city_normalized, {
-        "status": "error",
-        "error_message": f"Sorry, I don't have weather info for {city}."
-    })
+
+    if city_normalized in mock_weather_db:
+        data = mock_weather_db[city_normalized]
+        temp_c = data["temp_c"]
+        condition = data["condition"]
+
+        # Format temperature based on state preference
+        if preferred_unit == "Fahrenheit":
+            temp_value = (temp_c * 9/5) + 32 # Calculate Fahrenheit
+            temp_unit = "°F"
+        else: # Default to Celsius
+            temp_value = temp_c
+            temp_unit = "°C"
+
+        report = f"The weather in {city.capitalize()} is {condition} with a temperature of {temp_value:.0f}{temp_unit}."
+        result = {"status": "success", "report": report}
+        print(f"--- Tool: Generated report in {preferred_unit}. Result: {result} ---")
+
+        # Example of writing back to state (optional for this tool)
+        tool_context.state["last_city_checked_stateful"] = city
+        print(f"--- Tool: Updated state 'last_city_checked_stateful': {city} ---")
+
+        return result
+    else:
+        # Handle city not found
+        error_msg = f"Sorry, I don't have weather information for '{city}'."
+        print(f"--- Tool: City '{city}' not found. ---")
+        return {"status": "error", "error_message": error_msg}
+
 
 
 if greeting_agent and farewell_agent:
@@ -32,7 +67,7 @@ if greeting_agent and farewell_agent:
                     "Analyze the user's query. If it's a greeting, delegate to 'greeting_agent'. If it's a farewell, delegate to 'farewell_agent'. "
                     "If it's a weather request, handle it yourself using 'get_weather'. "
                     "For anything else, respond appropriately or state you cannot handle it.",
-        tools=[get_weather], # Root agent still needs the weather tool for its core task
+        tools=[get_weather_stateful], # Root agent still needs the weather tool for its core task
         # Key change: Link the sub-agents here!
         sub_agents=[greeting_agent, farewell_agent]
     )
