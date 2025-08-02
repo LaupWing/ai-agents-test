@@ -69,7 +69,8 @@ if greeting_agent and farewell_agent:
                     "For anything else, respond appropriately or state you cannot handle it.",
         tools=[get_weather_stateful], # Root agent still needs the weather tool for its core task
         # Key change: Link the sub-agents here!
-        sub_agents=[greeting_agent, farewell_agent]
+        sub_agents=[greeting_agent, farewell_agent],
+        output_key="last_weather_report"
     )
     print(f"✅ Root Agent '{weather_agent_team.name}' created using model '{root_agent_model}' with sub-agents: {[sa.name for sa in weather_agent_team.sub_agents]}")
 
