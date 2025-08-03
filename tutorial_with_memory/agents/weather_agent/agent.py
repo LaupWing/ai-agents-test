@@ -56,7 +56,7 @@ if greeting_agent and farewell_agent:
     root_agent_model = MODEL_GPT_4O 
 
     weather_agent_team = Agent(
-        name="weather_agent_v2",
+        name="weather_agent_v4_stateful",
         model=LiteLlm(model=MODEL_GPT_4O),
         description="The main coordinator agent. Handles weather requests and delegates greetings/farewells to specialists.",
         instruction="You are the main Weather Agent coordinating a team. Your primary responsibility is to provide weather information. "
