@@ -39,13 +39,11 @@ def get_weather_stateful(city: str, tool_context: ToolContext) -> dict:
         result = {"status": "success", "report": report}
         print(f"--- Tool: Generated report in {preferred_unit}. Result: {result} ---")
 
-        # Example of writing back to state (optional for this tool)
         tool_context.state["last_city_checked_stateful"] = city
         print(f"--- Tool: Updated state 'last_city_checked_stateful': {city} ---")
 
         return result
     else:
-        # Handle city not found
         error_msg = f"Sorry, I don't have weather information for '{city}'."
         print(f"--- Tool: City '{city}' not found. ---")
         return {"status": "error", "error_message": error_msg}
