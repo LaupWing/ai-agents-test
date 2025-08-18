@@ -20,6 +20,44 @@ async def main():
         app_name=APP_NAME,
         session_service=session_service
     )
+    print("\n--- Testing State: Temp Unit Conversion & output_key ---")
+
+        # 1. Check weather (Uses initial state: Celsius)
+    print("--- Turn 1: Requesting weather in London (expect Celsius) ---")
+    await call_agent_async(query= "What's the weather in London?",
+                            runner=runner_root_stateful,
+                            user_id=USER_ID_STATEFUL,
+                            session_id=SESSION_ID_STATEFUL
+                            )
+
+    # 2. Manually update state preference to Fahrenheit - DIRECTLY MODIFY STORAGE
+    print("\n--- Manually Updating State: Setting unit to Fahrenheit ---")
+    try:
+        stored_session = session_service_stateful.sessions[APP_NAME][USER_ID_STATEFUL][SESSION_ID_STATEFUL]
+        stored_session.state["user_preference_temperature_unit"] = "Fahrenheit"
+        
+        print(f"--- Stored session state updated. Current 'user_preference_temperature_unit': {stored_session.state.get('user_preference_temperature_unit', 'Not Set')} ---") # Added .get for safety
+    except KeyError:
+        print(f"--- Error: Could not retrieve session '{SESSION_ID_STATEFUL}' from internal storage for user '{USER_ID_STATEFUL}' in app '{APP_NAME}' to update state. Check IDs and if session was created. ---")
+    except Exception as e:
+            print(f"--- Error updating internal session state: {e} ---")
+
+    print("\n--- Turn 2: Requesting weather in New York (expect Fahrenheit) ---")
+    await call_agent_async(query= "Tell me the weather in New York.",
+        runner=runner_root_stateful,
+        user_id=USER_ID_STATEFUL,
+        session_id=SESSION_ID_STATEFUL
+    )
+    print("\n--- Turn 3: Sending a greeting ---")
+    await call_agent_async(query= "Hi!",
+        runner=runner_root_stateful,
+        user_id=USER_ID_STATEFUL,
+        session_id=SESSION_ID_STATEFUL
+    )
+
+
+
+
 
     # --- Interactions using await (correct within async def) ---
     await call_agent_async(query = "Hello there!",
