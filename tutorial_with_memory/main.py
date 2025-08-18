@@ -25,10 +25,10 @@ async def main():
         # 1. Check weather (Uses initial state: Celsius)
     print("--- Turn 1: Requesting weather in London (expect Celsius) ---")
     await call_agent_async(query= "What's the weather in London?",
-                            runner=runner_root_stateful,
-                            user_id=USER_ID_STATEFUL,
-                            session_id=SESSION_ID_STATEFUL
-                            )
+        runner=runner_root_stateful,
+        user_id=USER_ID_STATEFUL,
+        session_id=SESSION_ID_STATEFUL
+    )
 
     # 2. Manually update state preference to Fahrenheit - DIRECTLY MODIFY STORAGE
     print("\n--- Manually Updating State: Setting unit to Fahrenheit ---")
