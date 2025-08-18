@@ -56,10 +56,6 @@ async def main():
         session_id=SESSION_ID_STATEFUL
     )
 
-
-
-
-
     # --- Interactions using await (correct within async def) ---
     await call_agent_async(query = "Hello there!",
         runner=runner_agent_team,
