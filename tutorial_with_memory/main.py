@@ -6,6 +6,11 @@ from agents.weather_agent.agent import weather_agent_team
 from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
 
+initial_state = {
+    "user_preference_temperature_unit": "Celsius"
+}
+
+
 async def main():
     print("\n--- Testing Agent Team Delegation ---")
     session_service = InMemorySessionService()
