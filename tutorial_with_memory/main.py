@@ -1,5 +1,4 @@
 import asyncio
-from tkinter import SE
 from utils.interaction import call_agent_async
 from config import APP_NAME, USER_ID, SESSION_ID
 from agents.weather_agent.agent import weather_agent_team
