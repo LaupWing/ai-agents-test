@@ -45,29 +45,12 @@ async def main():
 
     print("\n--- Turn 2: Requesting weather in New York (expect Fahrenheit) ---")
     await call_agent_async(query= "Tell me the weather in New York.",
-        runner=runner_root_stateful,
-        user_id=USER_ID_STATEFUL,
-        session_id=SESSION_ID_STATEFUL
+        runner=runner_agent_team,
+        user_id=USER_ID,
+        session_id=SESSION_ID
     )
     print("\n--- Turn 3: Sending a greeting ---")
     await call_agent_async(query= "Hi!",
-        runner=runner_root_stateful,
-        user_id=USER_ID_STATEFUL,
-        session_id=SESSION_ID_STATEFUL
-    )
-
-    # --- Interactions using await (correct within async def) ---
-    await call_agent_async(query = "Hello there!",
-        runner=runner_agent_team,
-        user_id=USER_ID,
-        session_id=SESSION_ID
-    )
-    await call_agent_async(query = "What is the weather in New York?",
-        runner=runner_agent_team,
-        user_id=USER_ID,
-        session_id=SESSION_ID
-    )
-    await call_agent_async(query = "Thanks, bye!",
         runner=runner_agent_team,
         user_id=USER_ID,
         session_id=SESSION_ID
